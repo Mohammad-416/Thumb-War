@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Thumb War Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        h1 {
+            margin-bottom: 5px;
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            text-align: center;
+        }
+        .subtitle {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #666;
+            text-align: center;
+            font-size: clamp(0.875rem, 3vw, 1rem);
+        }
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            aspect-ratio: 3/2;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .arena {
+            position: relative;
+            width: 100%;
+            height: 75%;
+            background-color: #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .hand {
+            position: absolute;
+            width: 20%;
+            max-width: 100px;
+            height: auto;
+            aspect-ratio: 2/3;
+        }
+        .player1-hand {
+            left: 25%;
+            bottom: 10%;
+            transform: rotate(-10deg);
+        }
+        .player2-hand {
+            right: 25%;
+            bottom: 10%;
+            transform: rotate(10deg) scaleX(-1);
+        }
+        .thumb {
+            position: absolute;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+        .player1-thumb {
+            bottom: 70px;
+            left: 25px;
+            transform-origin: 50% 100%;
+        }
+        .player2-thumb {
+            bottom: 70px;
+            left: 25px;
+            transform-origin: 50% 100%;
+        }
+        .controls {
+            width: 100%;
+            height: 25%;
+            min-height: 80px;
+            background-color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 30%;
+        }
+        .health-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #444;
+            border-radius: 3px;
+            margin-bottom: 5px;
+        }
+        .health-fill {
+            height: 100%;
+            background-color: #2ecc71;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .player1-health-fill {
+            background-color: #3498db;
+        }
+        .player2-health-fill {
+            background-color: #e74c3c;
+        }
+        .status {
+            text-align: center;
+            font-weight: bold;
+            flex: 1;
+            font-size: clamp(0.75rem, 3vw, 1rem);
+            padding: 0 5px;
+        }
+        button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 5px;
+            font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+            width: 100%;
+        }
+        .player1-button {
+            background-color: #3498db;
+        }
+        .player1-button:hover {
+            background-color: #2980b9;
+        }
+        .player2-button {
+            background-color: #e74c3c;
+        }
+        .player2-button:hover {
+            background-color: #c0392b;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(2rem, 15vw, 4.5rem);
+            font-weight: bold;
+            color: #e74c3c;
+            z-index: 10;
+        }
+        .win-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 75%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
+            font-weight: bold;
+            display: none;
+            z-index: 20;
+        }
+        .game-setup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 30;
+        }
+        .game-setup h2 {
+            margin-bottom: 30px;
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            text-align: center;
+            padding: 0 10px;
+        }
+        .setup-options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 80%;
+            max-width: 300px;
+        }
+        .online-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: clamp(0.7rem, 3vw, 0.875rem);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #95a5a6;
+        }
+        .online {
+            background-color: #2ecc71;
+        }
+        .waiting {
+            background-color: #f39c12;
+        }
+        .player-label {
+            position: absolute;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: clamp(0.6rem, 2.5vw, 0.75rem);
+            z-index: 5;
+            white-space: nowrap;
+        }
+        .player1-label {
+            left: 25%;
+            bottom: 45%;
+            background-color: rgba(52, 152, 219, 0.7);
+            transform: translateX(-50%);
+        }
+        .player2-label {
+            right: 25%;
+            bottom: 45%;
+            background-color: rgba(231, 76, 60, 0.7);
+            transform: translateX(50%);
+        }
+        .avatar-img {
+            width: clamp(15px, 5vw, 20px);
+            height: clamp(15px, 5vw, 20px);
+            vertical-align: middle;
+            border-radius: 50%;
+        }
+        .room-info {
+            text-align: center;
+            margin-top: 10px;
+            font-size: clamp(0.75rem, 3vw, 0.875rem);
+            color: #666;
+            word-break: break-all;
+            padding: 0 10px;
+        }
+        .key-controls {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 10px;
+            font-size: clamp(0.7rem, 3vw, 0.875rem);
+            color: #666;
+        }
+        .key {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #ddd;
+            border-radius: 4px;
+            color: #333;
+            font-weight: bold;
+            margin: 0 3px;
+        }
+        #join-room-container {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+            width: 80%;
+            max-width: 300px;
+        }
+        #room-id-input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            width: 100%;
+            text-align: center;
+            font-size: clamp(0.9rem, 3vw, 1rem);
+        }
+        
+        /* Touch controls for mobile */
+        .touch-controls {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 10px;
+        }
+        .touch-buttons {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+        .touch-button {
+            width: 45%;
+            padding: 15px 0;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+        
+        /* Media queries for responsive design */
+        @media (max-width: 768px) {
+            .game-container {
+                aspect-ratio: 4/3;
+            }
+            .controls {
+                height: auto;
+                min-height: 100px;
+                flex-wrap: wrap;
+                padding: 10px;
+            }
+            .player-controls {
+                width: 45%;
+            }
+            .status {
+                width: 100%;
+                order: -1;
+                margin-bottom: 10px;
+            }
+            .key-controls {
+                display: none;
+            }
+            .touch-controls {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            .player-label {
+                bottom: 50%;
+            }
+            .player1-label, .player2-label {
+                padding: 2px 6px;
+            }
+            .game-setup h2 {
+                font-size: clamp(1rem, 5vw, 1.5rem);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Online Thumb War!</h1>
+    <p class="subtitle">Battle your friends in an epic thumb wrestling match online!</p>
+    
+    <div class="game-container">
+        <div class="arena">
+            <div class="countdown"></div>
+            <div class="win-screen">
+                <div class="win-message"></div>
+                <button id="play-again" style="margin-top: 20px">Play Again</button>
+            </div>
+            
+            <div class="online-status">
+                <div id="status-indicator" class="status-indicator"></div>
+                <span id="connection-status">Offline</span>
+            </div>
+            
+            <!-- Player 1 Hand (You) -->
+            <div class="player-label player1-label" style="text-align: center; transform: translate(50);">MADAM JI <img src="https://i.pinimg.com/736x/ec/c9/45/ecc94572d0240a1b0b47456c3da584d0.jpg" width="10px" height="10px" style="transform: translate(50);"/></div>
+            <div class="hand player1-hand">
+                <svg width="100" height="150" viewBox="0 0 100 150">
+                    <rect x="30" y="0" width="40" height="100" rx="15" fill="#3498db" stroke="#333" stroke-width="2"/>
+                    <g class="thumb player1-thumb">
+                        <rect x="0" y="10" width="30" height="60" rx="10" fill="#3498db" stroke="#333" stroke-width="2"/>
+                    </g>
+                </svg>
+            </div>
+            
+            <!-- Player 2 Hand (Opponent) -->
+            <div class="player-label player2-label">Mohammad Kumar Shah</div>
+            <div class="hand player2-hand">
+                <svg width="100" height="150" viewBox="0 0 100 150">
+                    <rect x="30" y="0" width="40" height="100" rx="15" fill="#e74c3c" stroke="#333" stroke-width="2"/>
+                    <g class="thumb player2-thumb">
+                        <rect x="0" y="10" width="30" height="60" rx="10" fill="#e74c3c" stroke="#333" stroke-width="2"/>
+                    </g>
+                </svg>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="player-controls player1-controls">
+                <div class="health-bar">
+                    <div id="player1-health" class="health-fill player1-health-fill" style="width: 100%;"></div>
+                </div>
+                <button id="player1-attack" class="player1-button" disabled>Attack (Q)</button>
+                <button id="player1-block" class="player1-button" disabled>Block (W)</button>
+            </div>
+            
+            <div class="status" id="status">Waiting for game to start...</div>
+            
+            <div class="player-controls player2-controls">
+                <div class="health-bar">
+                    <div id="player2-health" class="health-fill player2-health-fill" style="width: 100%;"></div>
+                </div>
+                <div style="height: 60px;"></div>
+            </div>
+        </div>
+        
+        <div class="game-setup">
+            <h2>Online Thumb War Championship</h2>
+            <div class="setup-options">
+                <button id="create-room-btn" style="width: 200px">Create New Room</button>
+                <button id="show-join-room-btn" style="width: 200px">Join Existing Room</button>
+            </div>
+            <div id="join-room-container">
+                <input type="text" id="room-id-input" placeholder="Enter Room ID">
+                <button id="join-room-btn">Join Room</button>
+                <button id="cancel-join-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="key-controls">
+        <div>
+            <strong>Controls:</strong> 
+            <span>Attack: <span class="key">Q</span> or button | Block: <span class="key">W</span> or button</span>
+        </div>
+    </div>
+    
+    <div id="room-info" class="room-info"></div>
+    
+    <script>
+        // DOM Elements
+        const player1Thumb = document.querySelector('.player1-thumb');
+        const player2Thumb = document.querySelector('.player2-thumb');
+        const player1HealthBar = document.getElementById('player1-health');
+        const player2HealthBar = document.getElementById('player2-health');
+        const statusText = document.getElementById('status');
+        const player1AttackBtn = document.getElementById('player1-attack');
+        const player1BlockBtn = document.getElementById('player1-block');
+        const countdownEl = document.querySelector('.countdown');
+        const winScreen = document.querySelector('.win-screen');
+        const winMessage = document.querySelector('.win-message');
+        const playAgainBtn = document.getElementById('play-again');
+        const gameSetup = document.querySelector('.game-setup');
+        const createRoomBtn = document.getElementById('create-room-btn');
+        const showJoinRoomBtn = document.getElementById('show-join-room-btn');
+        const joinRoomContainer = document.getElementById('join-room-container');
+        const roomIdInput = document.getElementById('room-id-input');
+        const joinRoomBtn = document.getElementById('join-room-btn');
+        const cancelJoinBtn = document.getElementById('cancel-join-btn');
+        const statusIndicator = document.getElementById('status-indicator');
+        const connectionStatus = document.getElementById('connection-status');
+        const roomInfo = document.getElementById('room-info');
+        
+        // Game state
+        const game = {
+            player1Health: 100,
+            player2Health: 100,
+            isGameActive: false,
+            isPlayer1Attacking: false,
+            isPlayer1Blocking: false,
+            playerId: 1, // Always player 1 (local player)
+            peer: null,
+            connection: null,
+            roomId: null,
+            hostId: null
+        };
+        
+        // Message types for communication
+        const MessageType = {
+            ATTACK: 'attack',
+            BLOCK: 'block',
+            UNBLOCK: 'unblock',
+            START_GAME: 'start_game',
+            GAME_OVER: 'game_over',
+            PLAY_AGAIN: 'play_again',
+            DAMAGE: 'damage',
+            SYNC_STATE: 'sync_state'
+        };
+        
+        // Event Listeners for buttons
+        player1AttackBtn.addEventListener('click', playerAttack);
+        player1BlockBtn.addEventListener('click', playerBlock);
+        playAgainBtn.addEventListener('click', requestPlayAgain);
+        createRoomBtn.addEventListener('click', createRoom);
+        showJoinRoomBtn.addEventListener('click', showJoinRoom);
+        joinRoomBtn.addEventListener('click', joinRoom);
+        cancelJoinBtn.addEventListener('click', cancelJoin);
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!game.isGameActive) return;
+            
+            // Player controls (Q and W)
+            if (e.key.toLowerCase() === 'q') {
+                playerAttack();
+            } else if (e.key.toLowerCase() === 'w') {
+                playerBlock();
+            }
+        });
+        
+        // Show join room interface
+        function showJoinRoom() {
+            joinRoomContainer.style.display = 'flex';
+            document.querySelector('.setup-options').style.display = 'none';
+        }
+        
+        // Cancel join room
+        function cancelJoin() {
+            joinRoomContainer.style.display = 'none';
+            document.querySelector('.setup-options').style.display = 'flex';
+        }
+        
+        // Create a new room
+        function createRoom() {
+            initializePeer();
+            statusIndicator.classList.add('waiting');
+            connectionStatus.textContent = 'Creating room...';
+            createRoomBtn.disabled = true;
+            showJoinRoomBtn.disabled = true;
+        }
+        
+        // Initialize PeerJS
+        function initializePeer() {
+            game.peer = new Peer();
+            
+            // When peer is open (connected to the signaling server)
+            game.peer.on('open', (id) => {
+                game.roomId = id;
+                game.hostId = id;
+                statusIndicator.classList.add('waiting');
+                connectionStatus.textContent = 'Waiting for opponent...';
+                roomInfo.innerHTML = `<strong>Your Room ID:</strong> ${id} <br><span style="font-size: 12px;">(Share this with your opponent)</span>`;
+                gameSetup.style.display = 'none';
+            });
+            
+            // When someone connects to us
+            game.peer.on('connection', (conn) => {
+                game.connection = conn;
+                setupConnectionHandlers();
+                statusIndicator.classList.remove('waiting');
+                statusIndicator.classList.add('online');
+                connectionStatus.textContent = 'Opponent Connected';
+                
+                // Start the game after opponent connects
+                setTimeout(() => {
+                    startNewGame();
+                    // Let other player know to start the game too
+                    sendMessage({ type: MessageType.START_GAME });
+                }, 1000);
+            });
+            
+            // Handle any errors
+            game.peer.on('error', (err) => {
+                console.error('Peer error:', err);
+                statusIndicator.classList.remove('online', 'waiting');
+                connectionStatus.textContent = 'Connection Error';
+                roomInfo.textContent = `Error: ${err.type}. Try refreshing the page.`;
+            });
+        }
+        
+        // Join an existing room
+        function joinRoom() {
+            const roomId = roomIdInput.value.trim();
+            if (!roomId) return;
+            
+            initializeJoinerPeer(roomId);
+            statusIndicator.classList.add('waiting');
+            connectionStatus.textContent = 'Joining room...';
+            joinRoomBtn.disabled = true;
+            cancelJoinBtn.disabled = true;
+        }
+        
+        // Initialize PeerJS for joining a room
+        function initializeJoinerPeer(hostId) {
+            game.peer = new Peer();
+            
+            // When peer is open (connected to the signaling server)
+            game.peer.on('open', (id) => {
+                // Connect to the host
+                game.connection = game.peer.connect(hostId);
+                game.hostId = hostId;
+                
+                game.connection.on('open', () => {
+                    setupConnectionHandlers();
+                    statusIndicator.classList.remove('waiting');
+                    statusIndicator.classList.add('online');
+                    connectionStatus.textContent = 'Connected to Host';
+                    gameSetup.style.display = 'none';
+                    roomInfo.textContent = `Connected to room: ${hostId}`;
+                });
+            });
+            
+            // Handle any errors
+            game.peer.on('error', (err) => {
+                console.error('Peer error:', err);
+                statusIndicator.classList.remove('online', 'waiting');
+                connectionStatus.textContent = 'Connection Error';
+                roomInfo.textContent = `Error: ${err.type}. Check the room ID and try again.`;
+                joinRoomBtn.disabled = false;
+                cancelJoinBtn.disabled = false;
+            });
+        }
+        
+        // Setup connection handlers
+        function setupConnectionHandlers() {
+            game.connection.on('data', (data) => {
+                handleReceivedMessage(data);
+            });
+            
+            game.connection.on('close', () => {
+                statusIndicator.classList.remove('online');
+                connectionStatus.textContent = 'Disconnected';
+                roomInfo.textContent = 'Your opponent disconnected. Refresh to start a new game.';
+                disableControls();
+            });
+            
+            game.connection.on('error', (err) => {
+                console.error('Connection error:', err);
+                statusIndicator.classList.remove('online');
+                connectionStatus.textContent = 'Connection Error';
+            });
+        }
+        
+        // Send message to the other player
+        function sendMessage(message) {
+            if (game.connection && game.connection.open) {
+                game.connection.send(message);
+            }
+        }
+        
+        // Handle received messages
+        function handleReceivedMessage(message) {
+            switch (message.type) {
+                case MessageType.ATTACK:
+                    opponentAttack();
+                    break;
+                    
+                case MessageType.BLOCK:
+                    opponentBlock();
+                    break;
+                    
+                case MessageType.UNBLOCK:
+                    opponentUnblock();
+                    break;
+                    
+                case MessageType.START_GAME:
+                    startNewGame();
+                    break;
+                    
+                case MessageType.GAME_OVER:
+                    handleGameOver(message.winner);
+                    break;
+                    
+                case MessageType.PLAY_AGAIN:
+                    resetGame();
+                    break;
+                    
+                case MessageType.DAMAGE:
+                    takeDamage(message.amount);
+                    break;
+                    
+                case MessageType.SYNC_STATE:
+                    syncGameState(message.state);
+                    break;
+            }
+        }
+        
+        // Initialize a new game
+        function startNewGame() {
+            player1AttackBtn.disabled = false;
+            player1BlockBtn.disabled = false;
+            
+            let count = 3;
+            countdownEl.textContent = count;
+            countdownEl.style.display = 'block';
+            
+            const countdown = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownEl.textContent = count;
+                } else {
+                    clearInterval(countdown);
+                    countdownEl.textContent = 'FIGHT!';
+                    setTimeout(() => {
+                        countdownEl.style.display = 'none';
+                        game.isGameActive = true;
+                        statusText.textContent = "Game on! Attack and block to win!";
+                    }, 1000);
+                }
+            }, 1000);
+        }
+        
+        // Player attack
+        function playerAttack() {
+            if (!game.isGameActive || game.isPlayer1Attacking) return;
+            
+            game.isPlayer1Attacking = true;
+            
+            // Animate player thumb
+            player1Thumb.style.transform = 'rotate(-45deg) translateY(-20px)';
+            
+            // Send attack message to opponent
+            sendMessage({ type: MessageType.ATTACK });
+            
+            setTimeout(() => {
+                // Reset player thumb
+                player1Thumb.style.transform = 'rotate(0)';
+                game.isPlayer1Attacking = false;
+            }, 400);
+        }
+        
+        // Opponent attacks
+        function opponentAttack() {
+            if (!game.isGameActive) return;
+            
+            // Animate opponent thumb
+            player2Thumb.style.transform = 'rotate(-45deg) translateY(-20px)';
+            
+            setTimeout(() => {
+                // Check if we are blocking
+                if (!game.isPlayer1Blocking) {
+                    // Not blocking, take damage
+                    game.player1Health -= 10;
+                    player1HealthBar.style.width = `${game.player1Health}%`;
+                    statusText.textContent = "Ouch! You took damage!";
+                    
+                    // Send damage confirmation back to opponent
+                    sendMessage({ type: MessageType.DAMAGE, amount: 10 });
+                    
+                    // Check for loss
+                    if (game.player1Health <= 0) {
+                        sendMessage({ type: MessageType.GAME_OVER, winner: 2 });
+                        handleGameOver(2);
+                    }
+                } else {
+                    statusText.textContent = "You blocked the attack!";
+                }
+                
+                // Reset opponent thumb
+                setTimeout(() => {
+                    player2Thumb.style.transform = 'rotate(0)';
+                }, 200);
+            }, 200);
+        }
+        
+        // Player block
+        function playerBlock() {
+            if (!game.isGameActive) return;
+            
+            game.isPlayer1Blocking = true;
+            player1BlockBtn.disabled = true;
+            statusText.textContent = "Blocking...";
+            
+            // Send block message to opponent
+            sendMessage({ type: MessageType.BLOCK });
+            
+            setTimeout(() => {
+                game.isPlayer1Blocking = false;
+                player1BlockBtn.disabled = false;
+                statusText.textContent = "Block ended!";
+                
+                // Send unblock message to opponent
+                sendMessage({ type: MessageType.UNBLOCK });
+            }, 1000);
+        }
+        
+        // Opponent blocks
+        function opponentBlock() {
+            statusText.textContent = "Opponent is blocking!";
+        }
+        
+        // Opponent unblocks
+        function opponentUnblock() {
+            statusText.textContent = "Opponent's block ended!";
+        }
+        
+        // Take damage from opponent attack
+        function takeDamage(amount) {
+            game.player2Health -= amount;
+            player2HealthBar.style.width = `${game.player2Health}%`;
+            
+            // Check for win
+            if (game.player2Health <= 0) {
+                handleGameOver(1);
+            }
+        }
+        
+        // Handle game over
+        function handleGameOver(winner) {
+            game.isGameActive = false;
+            
+            winMessage.textContent = winner === 1 ? "You Win!" : "Opponent Wins!";
+            winScreen.style.display = "flex";
+            
+            player1AttackBtn.disabled = true;
+            player1BlockBtn.disabled = true;
+        }
+        
+        // Request play again
+        function requestPlayAgain() {
+            sendMessage({ type: MessageType.PLAY_AGAIN });
+            resetGame();
+        }
+        
+        // Reset game
+        function resetGame() {
+            game.player1Health = 100;
+            game.player2Health = 100;
+            game.isGameActive = false;
+            game.isPlayer1Attacking = false;
+            game.isPlayer1Blocking = false;
+            
+            player1HealthBar.style.width = "100%";
+            player2HealthBar.style.width = "100%";
+            
+            statusText.textContent = "Get ready for a new match!";
+            winScreen.style.display = "none";
+            
+            player1Thumb.style.transform = 'rotate(0)';
+            player2Thumb.style.transform = 'rotate(0)';
+            
+            startNewGame();
+        }
+        
+        // Disable controls
+        function disableControls() {
+            game.isGameActive = false;
+            player1AttackBtn.disabled = true;
+            player1BlockBtn.disabled = true;
+        }
+        
+        // Sync game state with opponent
+        function syncGameState(state) {
+            game.player2Health = state.player1Health;
+            player2HealthBar.style.width = `${game.player2Health}%`;
+        }
+    </script>
+</body>
+</html>

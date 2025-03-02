@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Madam Ji's Thumb War</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+        }
+        
+        body {
+            background-color: #ffe6f2;
+            color: #ff66b2;
+            overflow-x: hidden;
+            text-align: center;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff99cc, #ff66b2);
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(255, 102, 178, 0.5);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .title {
+            font-size: 3.5rem;
+            color: white;
+            text-shadow: 3px 3px 0px #ff0080;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.8rem;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .main {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .game-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 25px;
+            margin: 40px 0;
+            box-shadow: 0 10px 30px rgba(255, 102, 178, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #game-placeholder {
+            background-color: #fff4f9;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #ff80bf, #ff1a8c);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin: 20px 0;
+            box-shadow: 0 6px 0px #ff0080;
+            transition: all 0.2s;
+            max-width: 100%;
+        }
+        
+        .button:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0px #ff0080;
+        }
+        
+        .instructions {
+            background-color: #fff4f9;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            text-align: left;
+            box-shadow: 0 6px 15px rgba(255, 102, 178, 0.3);
+        }
+        
+        .instructions h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ff66b2;
+        }
+        
+        .instructions ol {
+            padding-left: 30px;
+        }
+        
+        .instructions li {
+            margin-bottom: 15px;
+        }
+        
+        .pookie-img {
+            width: 150px;
+            position: absolute;
+            z-index: 0;
+            opacity: 0.8;
+            transition: transform 0.5s;
+            border-radius: 15px;
+        }
+        
+        .pookie-img:hover {
+            transform: scale(1.1) rotate(5deg);
+            opacity: 1;
+        }
+        
+        .img1 { top: 10%; right: 5%; }
+        .img2 { bottom: 15%; left: 8%; }
+        .img3 { top: 20%; left: 15%; }
+        .img4 { bottom: 25%; right: 10%; }
+        
+        .heart {
+            position: absolute;
+            font-size: 2rem;
+            color: #ff99cc;
+            animation: float 3s infinite ease-in-out;
+            z-index: 0;
+            opacity: 0.7;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+        
+        .message-banner {
+            background: linear-gradient(135deg, #ff80bf, #ff1a8c);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            font-size: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 6px 15px rgba(255, 26, 140, 0.4);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 6px 15px rgba(255, 26, 140, 0.4); }
+            50% { box-shadow: 0 6px 25px rgba(255, 26, 140, 0.6); }
+            100% { box-shadow: 0 6px 15px rgba(255, 26, 140, 0.4); }
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, #ff66b2, #ff99cc);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            position: relative;
+            overflow: hidden;
+            margin-top: 50px;
+        }
+        
+        .madam-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #ff66b2;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 3px 3px 0px #ff0080;
+            animation: wiggle 4s infinite;
+            z-index: 100;
+            font-weight: bold;
+        }
+        
+        @keyframes wiggle {
+            0% { transform: rotate(0deg); }
+            85% { transform: rotate(0deg); }
+            90% { transform: rotate(5deg); }
+            95% { transform: rotate(-5deg); }
+            100% { transform: rotate(0deg); }
+        }
+        
+        .crown-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .thumb-icons {
+            font-size: 4rem;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .thumb-icon {
+            animation: thumbPulse 1.5s infinite alternate;
+        }
+        
+        @keyframes thumbPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.2); }
+        }
+        
+        .vs-text {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ff66b2;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1.3rem;
+            }
+            
+            .message-banner {
+                font-size: 1.2rem;
+                padding: 15px;
+            }
+            
+            .game-container {
+                padding: 20px;
+            }
+            
+            .instructions {
+                padding: 20px;
+            }
+            
+            .button {
+                padding: 12px 25px;
+                font-size: 1.3rem;
+            }
+            
+            .pookie-img {
+                width: 100px;
+            }
+            
+            .madam-badge {
+                font-size: 0.9rem;
+                padding: 8px 15px;
+                top: 10px;
+                right: 10px;
+            }
+            
+            .thumb-icons {
+                font-size: 3rem;
+                gap: 20px;
+            }
+            
+            .vs-text {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .title {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .message-banner {
+                font-size: 1rem;
+                padding: 12px;
+            }
+            
+            .game-container {
+                padding: 15px;
+            }
+            
+            #game-placeholder {
+                min-height: 300px;
+                padding: 20px;
+            }
+            
+            .instructions {
+                padding: 15px;
+            }
+            
+            .instructions li {
+                margin-bottom: 10px;
+                font-size: 0.9rem;
+            }
+            
+            .button {
+                padding: 10px 20px;
+                font-size: 1.1rem;
+            }
+            
+            .pookie-img {
+                width: 80px;
+            }
+            
+            .madam-badge {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+            
+            .crown-icon {
+                font-size: 1.5rem;
+            }
+            
+            .thumb-icons {
+                font-size: 2.5rem;
+                gap: 15px;
+            }
+            
+            .vs-text {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="madam-badge">👑 Madam Ji's Zone 👑</div>
+    
+    <header class="header">
+        <h1 class="title">Thumb War Kise Kehte? Hm to angootha angootha khelenge 😈😈</h1>
+        <p class="subtitle">A Special Game Created Just For You!</p>
+    </header>
+    
+    <main class="main">
+        <div class="message-banner">
+            💖 Let's battle with our thumbs, Madam Ji! Hehehahahaha! 😈😈
+        </div>
+        
+        <section class="game-container">
+            <h2 style="font-size: 2.5rem; margin-bottom: 20px; color: #ff66b2;">
+                Angootha Angootha 👽
+            </h2>
+     
+            <!-- This is where your game will be inserted -->
+            <div id="game-placeholder">
+                <div class="thumb-icons">
+                    <div class="thumb-icon" width="100%">Pagal</div>
+                    <div class="vs-text">VS</div>
+                    <div class="thumb-icon" style="transform: scaleX(-1);" width="100%">Pookiw</div>
+                </div>
+                <h3 style="margin-bottom: 20px; font-size: 1.8rem;">One, Two, Three, Four...</h3>
+                <h2 style="margin-bottom: 30px; font-size: 2.2rem;">I Declare a Thumb War!</h2>
+                <a href="/index.html"><button class="button" id="start-game-button">Start Playing!</button></a>
+            </div>
+            
+            <span class="heart" style="top: 15%; left: 25%;">❤️</span>
+            <span class="heart" style="top: 45%; right: 15%;">💖</span>
+            <span class="heart" style="bottom: 20%; left: 40%;">💕</span>
+        </section>
+        
+        <section class="instructions">
+            <h2>How to Play</h2>
+            <ol>
+                <li>Click the "Start Playing" button to begin the thumb war.</li>
+                <li>When the countdown finishes, tap your thumb as fast as you can!</li>
+                <li>The first player to reach 10 taps wins the round.</li>
+                <li>Play multiple rounds to determine the ultimate thumb war champion!</li>
+                <li>Remember, Madam Ji's thumb powers are legendary - so bring your best game!</li>
+            </ol>
+            
+            
+        </section>
+        
+        <section class="message-banner" style="font-size: 1.8rem; padding: 30px;">
+            💝 One, two, three, four, I declare a thumb war! 💝
+        </section>
+    </main>
+    <img src="https://i.pinimg.com/736x/ec/c9/45/ecc94572d0240a1b0b47456c3da584d0.jpg" alt="placeholder" class="pookie-img img4" />
+    
+    <footer class="footer">
+        <p>Made with 💖 especially for Madam Ji | Your Personal Thumb War Arena</p>
+        <p style="margin-top: 10px; font-size: 0.9rem;">© 2025 - A special gift just for you!</p>
+    </footer>
+    
+    <script>
+        // Add some hearts randomly across the page
+        function createHearts() {
+            const heartSymbols = ['❤️', '💖', '💕', '💗', '💓', '💘', '💝', '❣️', '💞'];
+            const body = document.querySelector('body');
+            
+            for (let i = 0; i < 15; i++) {
+                const heart = document.createElement('span');
+                heart.className = 'heart';
+                heart.textContent = heartSymbols[Math.floor(Math.random() * heartSymbols.length)];
+                heart.style.left = `${Math.random() * 100}%`;
+                heart.style.top = `${Math.random() * 100}%`;
+                heart.style.animationDelay = `${Math.random() * 3}s`;
+                heart.style.fontSize = `${Math.random() * 1.5 + 1}rem`;
+                body.appendChild(heart);
+            }
+        }
+        
+        // Create a special welcome message for Madam Ji
+        function showWelcomeMessage() {
+            setTimeout(() => {
+                alert("Welcome to your special Thumb War game, Madam Ji! Or Pagal bola na to gugudi krke bhaag jaunga 😏😏");
+            }, 1500);
+        }
+        
+        
+        
+        // Run functions when page loads
+        window.onload = function() {
+            createHearts();
+            showWelcomeMessage();
+        };
+    </script>
+</body>
+</html>
